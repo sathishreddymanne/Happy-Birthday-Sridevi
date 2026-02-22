@@ -775,8 +775,8 @@
     <div class="bg-orb orb-3"></div>
 
     <!-- Audio -->
-    <audio id="bg-music" loop>
-        <source src="Another_Year_Around.mp3" type="audio/mp3">
+    <audio id="bg-music" loop preload="auto">
+        <source src="Another_Year_Around.mp3" type="audio/mpeg">
     </audio>
     <div style="position: fixed; bottom: 30px; left: 30px; z-index: 100;">
         <button onclick="toggleMusic()" id="music-btn"
@@ -1034,7 +1034,11 @@
             // Start music on first click if not playing
             const music = document.getElementById('bg-music');
             if (music && music.paused) {
-                music.play().catch(() => { });
+                music.play().then(() => {
+                    console.log("Audio playing successfully");
+                }).catch(err => {
+                    console.error("Audio playback failed:", err);
+                });
                 const btn = document.getElementById('music-btn');
                 if (btn) btn.innerText = "⏸";
             }
