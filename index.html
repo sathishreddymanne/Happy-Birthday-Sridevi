@@ -844,8 +844,8 @@
     <div class="bg-orb orb-3"></div>
 
     <!-- Audio -->
-    <audio id="bg-music" loop preload="auto">
-        <source src="Another_Year_Around.mp3" type="audio/mpeg">
+    <audio id="bg-music" loop>
+        <source src="Another_Year_Around.mp3" type="audio/mp3">
     </audio>
 
     <!-- Canvas for Fireworks -->
@@ -1100,11 +1100,7 @@
             // Start music on first click if not playing
             const music = document.getElementById('bg-music');
             if (music && music.paused) {
-                music.play().then(() => {
-                    console.log("Audio playing successfully");
-                }).catch(err => {
-                    console.error("Audio playback failed:", err);
-                });
+                music.play().catch(() => { });
                 const btn = document.getElementById('music-btn');
                 if (btn) btn.innerText = "⏸";
             }
