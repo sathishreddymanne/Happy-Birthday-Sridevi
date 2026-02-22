@@ -30,7 +30,13 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            cursor: none !important;
+        }
+
+        /* Hide default cursor only on desktop */
+        @media (hover: hover) and (pointer: fine) {
+            * {
+                cursor: none !important;
+            }
         }
 
         body {
@@ -465,30 +471,59 @@
         /* --- CURSOR --- */
         #custom-cursor {
             position: fixed;
-            width: 40px;
-            height: 40px;
-            border: 2px solid var(--accent-gold);
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
             pointer-events: none;
             z-index: 9999;
             transform: translate(-50%, -50%);
-            transition: width 0.3s, height 0.3s, background 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 0 10px rgba(255, 23, 68, 0.3));
+        }
+
+        .cursor-heart {
+            width: 100%;
+            height: 100%;
+            fill: #ff1744;
+            /* Premium Red */
+            animation: heartPulse 1.5s infinite alternate ease-in-out;
+        }
+
+        .crystal {
+            fill: #ffd700;
+            filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.8));
+        }
+
+        @keyframes heartPulse {
+            from {
+                transform: scale(1);
+                filter: drop-shadow(0 0 3px rgba(255, 23, 68, 0.2));
+            }
+
+            to {
+                transform: scale(1.08);
+                filter: drop-shadow(0 0 8px rgba(255, 23, 68, 0.4));
+            }
+        }
+
+
+        @media (hover: hover) and (pointer: fine) {
+            #custom-cursor {
+                opacity: 1;
+            }
         }
 
         .sparkle {
             position: absolute;
-            width: 6px;
-            height: 6px;
-            background: var(--accent-gold);
-            border-radius: 50%;
             pointer-events: none;
             z-index: 9998;
-            filter: blur(1px);
-            animation: particleFade 1s forwards;
+            border-radius: 50%;
+            filter: blur(0.5px);
+            animation: particleFade 0.8s forwards ease-out;
+            box-shadow: 0 0 5px currentColor;
         }
 
         @keyframes particleFade {
@@ -623,6 +658,7 @@
             background: linear-gradient(90deg, #fff, var(--accent-gold), #fff);
             background-size: 200% auto;
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: shine 3s linear infinite;
         }
@@ -778,6 +814,46 @@
                 font-size: 1rem !important;
                 line-height: 1.4;
             }
+
+            .glass-container {
+                padding: 1.5rem !important;
+                margin: 0 10px;
+                border-radius: 25px !important;
+            }
+
+            #word-content {
+                font-size: 1.1rem !important;
+                min-height: 80px !important;
+            }
+
+            .finale-photo {
+                width: 120px !important;
+                height: 120px !important;
+                margin: 1rem 0 !important;
+            }
+
+            /* Better reveal position for mobile */
+            .envelope-wrapper.open .envelope-card.fully-out {
+                width: 92%;
+                max-width: 350px;
+                top: 48%;
+                /* Slightly lower */
+                transform: translate(-50%, -50%) scale(1.0) !important;
+                padding: 4.5rem 1.5rem 2rem 1.5rem;
+                /* More top padding to avoid flap overlap */
+            }
+
+            .envelope-card h3 {
+                font-size: 1.5rem;
+                margin-top: 0;
+                margin-bottom: 0.8rem;
+                color: var(--accent-gold);
+            }
+
+            .tap-hint {
+                font-size: 0.8rem;
+                margin-top: 1.5rem !important;
+            }
         }
     </style>
 </head>
@@ -800,8 +876,23 @@
     <!-- Canvas for Fireworks -->
     <canvas id="fireworks-canvas"></canvas>
 
-    <!-- Enhanced Cursor -->
-    <div id="custom-cursor">✨</div>
+    <!-- Enhanced Cursor: Crystal Red Heart -->
+    <div id="custom-cursor">
+        <svg class="cursor-heart" viewBox="0 0 32 32">
+            <path
+                d="M16 28.5L14.1 26.8C7.4 20.8 3 16.8 3 12C3 8.1 6.1 5 10 5C12.2 5 14.3 6 15.7 7.7L16 8.1L16.3 7.7C17.7 6 19.8 5 22 5C25.9 5 29 8.1 29 12C29 16.8 24.6 20.8 17.9 26.8L16 28.5Z" />
+            <!-- Golden Crystals/Glints -->
+            <path class="crystal" d="M22 10l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" transform="scale(0.8) translate(4, 2)">
+                <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" infinite />
+            </path>
+            <circle class="crystal" cx="12" cy="12" r="1.2">
+                <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" infinite />
+            </circle>
+            <circle class="crystal" cx="20" cy="18" r="0.8">
+                <animate attributeName="opacity" values="0.3;1;0.3" dur="2.5s" infinite />
+            </circle>
+        </svg>
+    </div>
 
     <div id="stage-0" class="center-stage visible" style="justify-content: center;">
         <div class="hero-subtitle">You are invited to a</div>
@@ -1115,36 +1206,83 @@
         let lastX = 0, lastY = 0;
 
         document.addEventListener('mousemove', e => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-            const target = e.target;
-            if (target.tagName === 'BUTTON' || target.closest('.photo-stack-item') || target.closest('.envelope-wrapper')) {
-                cursor.style.width = '70px';
-                cursor.style.height = '70px';
-                cursor.style.background = 'rgba(212, 175, 55, 0.2)';
+            updateCursor(e.clientX, e.clientY);
+        });
+
+        document.addEventListener('touchmove', e => {
+            if (e.touches.length > 0) {
+                updateCursor(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchstart', e => {
+            if (e.touches.length > 0) {
+                cursor.style.opacity = 1;
+                updateCursor(e.touches[0].clientX, e.touches[0].clientY);
+                // Burst on tap
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => createSparkle(e.touches[0].clientX, e.touches[0].clientY, true), i * 30);
+                }
+            }
+        }, { passive: true });
+
+        function updateCursor(x, y) {
+            cursor.style.left = x + 'px';
+            cursor.style.top = y + 'px';
+            cursor.style.opacity = 1;
+
+            // Interaction scale (detect element under cursor/finger)
+            const target = document.elementFromPoint(x, y);
+            const isClickable = target && (target.tagName === 'BUTTON' || target.closest('.photo-stack-item') || target.closest('.envelope-wrapper') || target.closest('.wax-seal') || target.classList.contains('word-bubble-btn'));
+
+            if (isClickable) {
+                cursor.style.transform = 'translate(-50%, -50%) scale(1.4)';
             } else {
-                cursor.style.width = '40px';
-                cursor.style.height = '40px';
-                cursor.style.background = 'transparent';
+                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
             }
 
-            if (Math.hypot(e.clientX - lastX, e.clientY - lastY) > 25) {
-                createSparkle(e.clientX, e.clientY);
-                lastX = e.clientX; lastY = e.clientY;
+            if (Math.hypot(x - lastX, y - lastY) > 20) {
+                createSparkle(x, y);
+                lastX = x; lastY = y;
+            }
+        }
+
+        document.addEventListener('mousedown', e => {
+            if (window.getComputedStyle(cursor).display === 'none') return;
+            cursor.style.transform = 'translate(-50%, -50%) scale(0.8)';
+            // Burst effect
+            for (let i = 0; i < 12; i++) {
+                setTimeout(() => createSparkle(e.clientX, e.clientY, true), i * 20);
             }
         });
 
-        function createSparkle(x, y) {
+        document.addEventListener('mouseup', e => {
+            if (window.getComputedStyle(cursor).display === 'none') return;
+            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+
+        function createSparkle(x, y, isBurst = false) {
+            const colors = ['#d4af37', '#ff4081', '#ffffff', '#ffeb3b'];
             const s = document.createElement('div');
             s.className = 'sparkle';
             s.style.left = x + 'px';
             s.style.top = y + 'px';
+
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const size = (Math.random() * (isBurst ? 10 : 6)) + 2;
+
+            s.style.width = size + 'px';
+            s.style.height = size + 'px';
+            s.style.background = color;
+            s.style.color = color;
+
             const angle = Math.random() * Math.PI * 2;
-            const dist = Math.random() * 60 + 20;
+            const dist = isBurst ? (Math.random() * 100 + 40) : (Math.random() * 60 + 20);
             s.style.setProperty('--mx', Math.cos(angle) * dist + 'px');
             s.style.setProperty('--my', Math.sin(angle) * dist + 'px');
+
             document.body.appendChild(s);
-            setTimeout(() => s.remove(), 1000);
+            setTimeout(() => s.remove(), 800);
         }
 
         /* AUDIO */
