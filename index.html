@@ -514,75 +514,6 @@
             }
         }
 
-        /* --- BUTTERFLY TRANSITION --- */
-        .butterfly {
-            position: absolute;
-            width: 42px;
-            height: 42px;
-            pointer-events: none;
-            z-index: 10000;
-            will-change: transform, opacity;
-        }
-
-        .butterfly svg {
-            width: 100%;
-            height: 100%;
-            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
-        }
-
-        .wing {
-            animation: flap 0.15s infinite alternate ease-in-out;
-            transform-origin: center;
-        }
-
-        .wing-right {
-            transform-origin: center;
-        }
-
-        .wing-left {
-            transform-origin: center;
-        }
-
-        @keyframes flap {
-            from {
-                transform: scaleX(1);
-            }
-
-            to {
-                transform: scaleX(0.2);
-            }
-        }
-
-        .butterfly-fly {
-            animation: flyAway 5s forwards cubic-bezier(0.15, 0.45, 0.35, 1);
-        }
-
-        @keyframes flyAway {
-            0% {
-                transform: translate(0, 0) scale(0.5) rotate(0deg);
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 1;
-                transform: translate(0, 0) scale(1) rotate(0deg);
-            }
-
-            100% {
-                transform: translate(var(--tx), var(--ty)) scale(0.8) rotate(var(--tr));
-                opacity: 0;
-            }
-        }
-
-        .photo-stack-item.dissolving {
-            pointer-events: none;
-            transition: clip-path 2s ease-in, filter 1.5s ease-in, opacity 2s ease-in, transform 2s ease-in !important;
-            clip-path: circle(0% at 50% 50%) !important;
-            filter: blur(25px) brightness(1.5) !important;
-            opacity: 0 !important;
-            transform: scale(1.1) rotate(var(--r)) !important;
-        }
-
 
 
 
@@ -1209,74 +1140,23 @@
             }, 300);
         }
 
-        /* GALLERY LOGIC with Slow-Motion Butterfly Conversion */
+        /* GALLERY LOGIC with Alternating Directions */
+        let swipeIndex = 0;
         function initGallery() {
             const items = document.querySelectorAll('.photo-stack-item');
-
-            items.forEach((item) => {
+            items.forEach(item => {
                 item.addEventListener('click', () => {
-                    if (item.classList.contains('dissolving')) return;
-
-                    const rect = item.getBoundingClientRect();
-
-                    // Generate a UNIQUE RANDOM COLOR for this specific conversion
-                    const randomHue = Math.floor(Math.random() * 360);
-                    const color = `hsl(${randomHue}, 90%, 70%)`;
-
-                    // Trigger Butterfly Burst from RANDOM POINTS ON IMAGE
-                    createButterflyBurst(rect, color);
-
-                    // Dissolve Image (Slow conversion)
-                    item.classList.add('dissolving');
+                    const directionClass = swipeIndex % 2 === 0 ? 'swiped-right' : 'swiped-left';
+                    item.classList.add(directionClass);
+                    swipeIndex++;
 
                     setTimeout(() => {
-                        item.classList.remove('dissolving');
+                        item.classList.remove('swiped-right', 'swiped-left');
                         document.getElementById('gallery-stack').appendChild(item);
-                        void item.offsetWidth;
-                    }, 2000); // Wait for the clip-path/blur conversion to finish before recyclings
+                    }, 600);
                 });
             });
         }
-
-        function createButterflyBurst(rect, color) {
-            const count = 15;
-            for (let i = 0; i < count; i++) {
-                // Stagger the spawning to look like a gradual conversion
-                setTimeout(() => {
-                    const b = document.createElement('div');
-                    b.className = 'butterfly butterfly-fly';
-
-                    // Spawn at a RANDOM POINT WITHIN THE IMAGE BOUNDS
-                    const spawnX = rect.left + Math.random() * rect.width;
-                    const spawnY = rect.top + Math.random() * rect.height;
-
-                    b.style.left = spawnX - 21 + 'px';
-                    b.style.top = spawnY - 21 + 'px';
-
-                    // Slow-Motion side flight logic
-                    const side = Math.random() > 0.5 ? 1 : -1;
-                    const tx = side * (Math.random() * 400 + 300); // Wide side flight
-                    const ty = (Math.random() - 0.7) * 600; // Fly upwards and sideways
-                    const tr = side * (Math.random() * 1080 + 360); // Multiple spins in slow motion
-
-                    b.style.setProperty('--tx', tx + 'px');
-                    b.style.setProperty('--ty', ty + 'px');
-                    b.style.setProperty('--tr', tr + 'deg');
-                    b.style.color = color;
-
-                    b.innerHTML = `
-                        <svg viewBox="0 0 32 32" style="filter: drop-shadow(0 0 8px ${color});">
-                            <path class="wing wing-left" fill="currentColor" d="M16 16C16 16 14 10 8 10C2 10 2 16 2 16C2 16 2 22 8 22C14 22 16 16 16 16Z" />
-                            <path class="wing wing-right" fill="currentColor" d="M16 16C16 16 18 10 24 10C30 10 30 16 30 16C30 16 30 22 24 22C18 22 16 16 16 16Z" />
-                        </svg>
-                    `;
-
-                    document.body.appendChild(b);
-                    setTimeout(() => b.remove(), 5000); // Remove after slow motion finishes
-                }, i * 80); // Stagger spawn every 80ms
-            }
-        }
-
 
 
         /* CURSOR & SPARKLES */
